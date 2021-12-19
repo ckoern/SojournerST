@@ -47,17 +47,16 @@ struct CommandPacket {
 	uint32_t command_value;
 	uint8_t checksum;
 
-	void load( const std::array<command_size>& buffer);
-
+	bool load( const std::array<command_size>& buffer);
 };
 
 struct ResponsePacket{
 	uint8_t cmd_checksum;
 	ResponseType response_type;
 	uint32_t response_value;
-	uint8_t checksum;
 
-	void put(std::array<response_size>& buffer);
+	bool put(std::array<response_size>& buffer);
+
 };
 
 
