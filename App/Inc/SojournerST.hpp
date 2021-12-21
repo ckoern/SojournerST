@@ -3,16 +3,24 @@
 #include <array>
 #include "SojournerSTConfig.hpp"
 #include "MotorController.hpp"
+#include "Packet.hpp"
 class SojournerST{
 public:
     SojournerST();
     void UpdatePidLoop(uint32_t delta_t_ms);
+
+    bool ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp);
+    
 private:
     // size will not change during runtime,
     // vectors will be initialized during SojournerST 
     // initializer list
     std::array<PidConfig, 2> pid_configs;
     std::array<MotorController, 2> motor_controllers;
+
+    bool ExecuteGlobalCommand(const CommandPacket& cmd, ResponsePacket& resp);
+    bool ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket& resp);
+
 };
 
 #endif

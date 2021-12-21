@@ -84,3 +84,9 @@ void MotorController::step(uint32_t delta_t_ms){
 	pidState.filter_state += delta_t_ms*0.001f*filter_prod;
 	pidState.filter_reset = 0;
 }
+
+
+void MotorController::ResetPid(){
+	pidState.integrator_state = 0;
+	pidState.filter_state = 0;
+}

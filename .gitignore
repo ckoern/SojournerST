@@ -1,6 +1,8 @@
 .metadata
 bin/
 tmp/
+build/
+.vscode/
 *.tmp
 *.bak
 *.swp

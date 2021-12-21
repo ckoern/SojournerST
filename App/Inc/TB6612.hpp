@@ -1,7 +1,7 @@
 #ifndef INC_TB6612_H_
 #define INC_TB6612_H_
 #include "stm32g4xx_hal.h"
-
+#include <stdint.h>
 
 enum MotorMode{
     CCW=0,

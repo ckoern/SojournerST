@@ -41,6 +41,13 @@ public:
     );
     void reset();
     void step(uint32_t delta_t_ms);
+	const EncoderState& GetEncoderState() const { return encoderState;};
+	const PidState& GetPidState() const { return pidState;};
+	const PidConfig* GetPidConfig() const { return pidConfig;};
+	PidConfig* GetPidConfig() { return pidConfig;};
+	void SetTargetCps( int16_t value ) {target_cps = value;}
+	int16_t GetTargetCps() const {return  target_cps;}
+	void ResetPid();
 private:
 	TB6612 tb6612;
 	TimerEncoder encoder;

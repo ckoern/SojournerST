@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(SojournerST)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -15,7 +15,15 @@ enable_testing()
 
 add_executable(
   sojournerst_test
-  test_packet.cpp
+  Test/test_packet.cpp
+  Test/test_board.cpp
+
+  App/Src/Packet.cpp
+  App/Src/MotorController.cpp
+  App/Src/TB6612.cpp
+  App/Src/SojournerST.cpp
+
+  Test/Stubs/Src/stm32g4xx_hal.c
 )
 
 target_include_directories(sojournerst_test PUBLIC 
