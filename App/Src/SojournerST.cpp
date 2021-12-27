@@ -173,8 +173,8 @@ bool SojournerST::ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket
                    sizeof(uint32_t)
             );
             break;            
-
         
     }
+    resp.response_type = Success;
     return true;
 }
