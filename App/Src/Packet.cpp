@@ -67,7 +67,7 @@ void CommandPacket::fill_checksum(){
     // create a temporary buffer on the stack and use the 
     // fill it with the content and calculate the cecksum from the temp buffer
     CommandBuffer buf;
-    put(buf, true);
+    put(buf, true); // put will update the checksum value
 }
 
 bool ResponsePacket::operator==(const ResponsePacket& rhs) const{
