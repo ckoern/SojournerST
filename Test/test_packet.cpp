@@ -14,7 +14,7 @@ TEST(Packet, BasicAssertions) {
 
 
 
-    CommandPacket send {0xcc, Global, Channel2, channel_pid_get_kd, 123953};
+    CommandPacket send { Global, Channel2, channel_pid_get_kd, 123953};
     send.put(data);
     CommandPacket rcv;
     rcv.load(data);

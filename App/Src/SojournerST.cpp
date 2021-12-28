@@ -168,12 +168,69 @@ bool SojournerST::ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket
 
 
         case channel_pid_get_kp:
-             memcpy(&resp.response_value, 
+            memcpy(&resp.response_value, 
                    &(pid_config.pid_kp), 
                    sizeof(uint32_t)
             );
             break;            
         
+        case channel_pid_set_kp:
+            memcpy(&(pid_config.pid_kp), 
+                    &cmd.command_value, 
+                   sizeof(float)
+            );
+            break;    
+
+
+        
+        case channel_pid_get_ki:
+            memcpy(&resp.response_value, 
+                   &(pid_config.pid_ki), 
+                   sizeof(uint32_t)
+            );
+            break;            
+        
+        case channel_pid_set_ki:
+            memcpy(&(pid_config.pid_ki), 
+                    &cmd.command_value, 
+                   sizeof(float)
+            );
+            break;
+
+        
+        
+        case channel_pid_get_kd:
+            memcpy(&resp.response_value, 
+                   &(pid_config.pid_kd), 
+                   sizeof(uint32_t)
+            );
+            break;            
+        
+        case channel_pid_set_kd:
+            memcpy(&(pid_config.pid_kd), 
+                    &cmd.command_value, 
+                   sizeof(float)
+            );
+            break;  
+
+        
+        case channel_pid_get_kn:
+            memcpy(&resp.response_value, 
+                   &(pid_config.pid_kn), 
+                   sizeof(uint32_t)
+            );
+            break;            
+        
+        case channel_pid_set_kn:
+            memcpy(&(pid_config.pid_kn), 
+                    &cmd.command_value, 
+                   sizeof(float)
+            );
+            break;  
+
+        default:
+            resp.response_type = Error_UnknownCommand;
+            return false;
     }
     resp.response_type = Success;
     return true;

@@ -19,37 +19,55 @@ struct BoardComTest : testing::Test
 struct target_test_param {
     int32_t set_value;
     ResponseType expect_response;
-    //int32_t get_value;
 };
 
+
+struct commandcyle_test_param{
+    CommandPacket write_cyle_cmd;
+    ResponsePacket write_cycle_resp_expect;
+    CommandPacket read_cyle_cmd;
+    ResponsePacket read_cycle_resp_expect;
+};
 struct BoardComTargetCpsTestFixture : BoardComTest, testing::WithParamInterface<target_test_param>{
 
 };
 
 TEST_F(BoardComTest, UseBadChecksum) {
     // write/read cycle for target_cps
-    send =CommandPacket{0xcc, Channel, Channel1, channel_set_target_cps, 1234};
-    send.put(command_data);
+    send =CommandPacket{ Channel, Channel1, channel_set_target_cps, 1234};
     //modify checksum
-    command_data[command_data.size()-1] = command_data[command_data.size()-1] - 1;
+    send.checksum = send.checksum - 1;
+    send.put(command_data, false);
     board.ExecuteCommand(command_data, response_data);
     rcv.load(response_data);
     EXPECT_EQ( ResponseType::Error_Checksum,rcv.response_type );
 }
 
+TEST_F(BoardComTest, UseBadSync) {
+    // write/read cycle for target_cps
+    send =CommandPacket{ Channel, Channel1, channel_set_target_cps, 1234};
+    // use bad sync byte
+    send.sync = 0xca;
+    // recalculate checksum
+    send.fill_checksum();
+    send.put(command_data, true);
+    board.ExecuteCommand(command_data, response_data);
+    rcv.load(response_data);
+    EXPECT_EQ( ResponseType::Error_Sync,rcv.response_type );
+}
 
 TEST_P(BoardComTargetCpsTestFixture, TargetCpsTest)
 {
     auto as = GetParam();
-    send =CommandPacket{0xcc, Channel, Channel1, channel_set_target_cps, 1234};
+    send =CommandPacket{ Channel, Channel1, channel_set_target_cps, 1234};
     send.command_value = as.set_value;
-    send.put(command_data);
+    send.put(command_data, true);
     board.ExecuteCommand(command_data, response_data);
     rcv.load(response_data);
     EXPECT_EQ( rcv.response_type, as.expect_response );
     if (as.expect_response == ResponseType::Success){
         send.command_id = channel_get_target_cps;
-        send.put(command_data);
+        send.put(command_data, true);
         board.ExecuteCommand(command_data, response_data);
         rcv.load(response_data);
         EXPECT_EQ( as.set_value, static_cast<int32_t>(rcv.response_value) );

@@ -92,12 +92,16 @@ struct CommandPacket {
 	uint32_t command_value;
 	uint8_t checksum;
 
+	CommandPacket() = default;
+	CommandPacket(const CommandPacket&) = default;
+	CommandPacket( CommandScopeType, CommandBankType, CommandType, uint32_t );
+	CommandPacket( uint8_t, CommandScopeType, CommandBankType, CommandType, uint32_t, uint8_t );
 
 	bool operator==(const CommandPacket&) const;
 
 	bool load( const CommandBuffer& buffer);
-	bool put(CommandBuffer& buffer);
-
+	bool put(CommandBuffer& buffer, bool recalculate_checksum = false);
+	void fill_checksum();
 };
 
 struct ResponsePacket{
