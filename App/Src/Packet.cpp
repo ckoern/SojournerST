@@ -1,5 +1,7 @@
 #include "Packet.hpp"
 
+
+
 // Set all variable command fields, sync byte and checksum will be filled automatically
 CommandPacket::CommandPacket( CommandScopeType scope, CommandBankType bank, 
         CommandType command_id, uint32_t command_value)
@@ -107,4 +109,3 @@ bool ResponsePacket::put(std::array<uint8_t, response_size>& buffer){
     buffer[6] = communication::calculate_checksum(&(buffer[0]), response_size-1);
     return true;
 }
-

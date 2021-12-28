@@ -26,6 +26,8 @@ add_executable(
   Test/Stubs/Src/stm32g4xx_hal.c
 )
 
+target_compile_options(sojournerst_test PRIVATE -Wall -Wextra)
+
 target_include_directories(sojournerst_test PUBLIC 
                 App/Inc
                 Test/Stubs/Inc

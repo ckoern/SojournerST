@@ -3,6 +3,8 @@
 #include "SojournerST.hpp"
 #include "Packet.hpp"
 
+
+#include "algorithm"
 struct BoardComTest : testing::Test
 {
     SojournerST board;

@@ -77,10 +77,10 @@ bool SojournerST::ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp)
     // general checks were successfull, now forward them
     // depending on global or channel command for processing
     if (command_packet.scope == Global ){
-        ExecuteGlobalCommand( command_packet, response_packet);
+        response_packet.response_type = ExecuteGlobalCommand( command_packet, response_packet);
     }
     else{
-        ExecuteChannelCommand( command_packet, response_packet);
+        response_packet.response_type = ExecuteChannelCommand( command_packet, response_packet);
     }
 
     // encode the response packet and store it into the com buffer
@@ -89,56 +89,47 @@ bool SojournerST::ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp)
 }
 
 
-bool SojournerST::ExecuteGlobalCommand(const CommandPacket& cmd, ResponsePacket& resp){
-    return false;
+ResponseType SojournerST::ExecuteGlobalCommand(const CommandPacket& cmd, ResponsePacket& resp){
+    return Error_Undefined;
 }
 
 
-bool SojournerST::ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket& resp){
+ResponseType SojournerST::ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket& resp){
     //size_t channel = cmd.bank;
     auto& motor_controller = motor_controllers[cmd.bank];
     auto& pid_config = pid_configs[cmd.bank];
     switch (cmd.command_id){
         // ----- read only commands
         case channel_current_cps:
-            memcpy(&resp.response_value, 
-                   &(motor_controller.GetEncoderState().enc_cps), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(motor_controller.GetEncoderState().enc_cps);
             break;
 
         case channel_pid_integrator_state:
-            memcpy(&resp.response_value, 
-                   &(motor_controller.GetPidState().integrator_state), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(motor_controller.GetPidState().integrator_state);
             break;
 
         case channel_pid_filter_state:
-            memcpy(&resp.response_value, 
-                   &(motor_controller.GetPidState().filter_state), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(motor_controller.GetPidState().filter_state);
             break;
 
         case channel_pid_gain:
-            memcpy(&resp.response_value, 
-                   &(motor_controller.GetPidState().gain), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(motor_controller.GetPidState().gain);
             break;
 
         case channel_pid_setpoint_error:
-            memcpy(&resp.response_value, 
-                   &(motor_controller.GetPidState().setpoint_error), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(motor_controller.GetPidState().setpoint_error);
             break;
 
         // ----- write only commands
         case channel_stop:
             motor_controller.SetTargetCps(0);
             break;
+
+
+        case channel_pid_reset :
+            motor_controller.ResetPid();
+            break;
+
 
         // ----- read/write commands
         case channel_get_target_cps:
@@ -153,85 +144,54 @@ bool SojournerST::ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket
             if ( (target < std::numeric_limits<int16_t>::min() )
                || (target > std::numeric_limits<int16_t>::max() ))
             {
-                resp.response_type = Error_Value;
                 resp.response_value = cmd.command_value;
-                return false;
+                return Error_Value;
             }
             else{
                 motor_controller.SetTargetCps(target);
             }
             break;
         }
-        case channel_pid_reset :
-            motor_controller.ResetPid();
-            break;
-
 
         case channel_pid_get_kp:
-            memcpy(&resp.response_value, 
-                   &(pid_config.pid_kp), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(pid_config.pid_kp);
             break;            
         
         case channel_pid_set_kp:
-            memcpy(&(pid_config.pid_kp), 
-                    &cmd.command_value, 
-                   sizeof(float)
-            );
+            pid_config.pid_kp = communication::extractValueAsFloat(cmd.command_value);
             break;    
 
 
         
         case channel_pid_get_ki:
-            memcpy(&resp.response_value, 
-                   &(pid_config.pid_ki), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(pid_config.pid_ki);
             break;            
         
         case channel_pid_set_ki:
-            memcpy(&(pid_config.pid_ki), 
-                    &cmd.command_value, 
-                   sizeof(float)
-            );
+            pid_config.pid_ki = communication::extractValueAsFloat(cmd.command_value);
             break;
 
         
         
         case channel_pid_get_kd:
-            memcpy(&resp.response_value, 
-                   &(pid_config.pid_kd), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(pid_config.pid_kd);
             break;            
         
         case channel_pid_set_kd:
-            memcpy(&(pid_config.pid_kd), 
-                    &cmd.command_value, 
-                   sizeof(float)
-            );
+            pid_config.pid_kd = communication::extractValueAsFloat(cmd.command_value);
             break;  
 
         
         case channel_pid_get_kn:
-            memcpy(&resp.response_value, 
-                   &(pid_config.pid_kn), 
-                   sizeof(uint32_t)
-            );
+            resp.setValueFromFloat(pid_config.pid_kn);
             break;            
         
         case channel_pid_set_kn:
-            memcpy(&(pid_config.pid_kn), 
-                    &cmd.command_value, 
-                   sizeof(float)
-            );
+            pid_config.pid_kn = communication::extractValueAsFloat(cmd.command_value);
             break;  
 
         default:
-            resp.response_type = Error_UnknownCommand;
-            return false;
+            return Error_UnknownCommand;
     }
-    resp.response_type = Success;
-    return true;
+    return Success;
 }

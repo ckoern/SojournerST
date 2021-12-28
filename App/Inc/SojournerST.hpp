@@ -18,8 +18,8 @@ private:
     std::array<PidConfig, 2> pid_configs;
     std::array<MotorController, 2> motor_controllers;
 
-    bool ExecuteGlobalCommand(const CommandPacket& cmd, ResponsePacket& resp);
-    bool ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket& resp);
+    ResponseType ExecuteGlobalCommand(const CommandPacket& cmd, ResponsePacket& resp);
+    ResponseType ExecuteChannelCommand(const CommandPacket& cmd, ResponsePacket& resp);
 
 };
 

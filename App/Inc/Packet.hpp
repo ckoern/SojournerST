@@ -9,6 +9,7 @@
 #define INC_PACKET_HPP_
 
 #include <stdint.h>
+#include <cstring>
 #include <array>
 #include "SojournerSTConfig.hpp"
 
@@ -49,7 +50,7 @@ enum CommandType{
 	channel_pid_reset,
 
 	// r/w set commands, ids are offset by 32 compared to the getters
-	channel_pid_set_kp = channel_pid_get_kp + 32,
+	channel_pid_set_kp = channel_pid_get_kp + setter_cmd_id_offset,
 	channel_pid_set_ki,
 	channel_pid_set_kd,
 	channel_pid_set_kn,
@@ -64,7 +65,9 @@ enum ResponseType{
 	Error_Value,
 	Error_UnknownCommand,
 
+	Error_Undefined // generic error
 };
+
 namespace communication{
 	inline uint8_t calculate_sum( uint8_t* buffer, size_t count ){
 		uint8_t sum = 0;
@@ -77,6 +80,24 @@ namespace communication{
 		uint8_t sum = calculate_sum(buffer, count);
 		return -static_cast<uint16_t>(sum); // two's complement
 	}
+
+	inline float   extractValueAsFloat(uint32_t value){
+		float val;
+		memcpy(&val, 
+			   &(value), 
+			   sizeof(uint32_t)
+		);
+		return val;
+	}
+
+	inline int32_t extractValueAsInt32(uint32_t value){
+		return static_cast<int32_t>(value);
+	}
+
+	inline int16_t extractValueAsInt16(uint32_t value){
+		return static_cast<int16_t>(static_cast<int32_t>(value));
+	}
+
 };
 struct CommandPacket {
 	// sync byte (8 bit)
@@ -114,8 +135,16 @@ struct ResponsePacket{
 	bool load( const ResponseBuffer& buffer);
 	bool put(ResponseBuffer& buffer);
 
+
+	inline void setValueFromFloat(float value);
 };
 
 
+void ResponsePacket::setValueFromFloat(float value){
+    memcpy(&response_value, 
+           &(value), 
+           sizeof(uint32_t)
+    );
+}
 
 #endif /* INC_PACKET_HPP_ */
