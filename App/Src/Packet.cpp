@@ -72,6 +72,24 @@ void CommandPacket::fill_checksum(){
     put(buf, true); // put will update the checksum value
 }
 
+
+
+
+ResponsePacket::ResponsePacket(uint8_t cmd_checksum, 
+        ResponseType response_type, uint32_t response_value)
+    : cmd_checksum(cmd_checksum), response_type(response_type),
+      response_value(response_value), checksum(0)
+{
+    fill_checksum();
+}
+ResponsePacket::ResponsePacket(uint8_t cmd_checksum, 
+        ResponseType response_type, uint32_t response_value, uint8_t checksum)
+    : cmd_checksum(cmd_checksum), response_type(response_type),
+      response_value(response_value), checksum(checksum)
+{
+
+}
+
 bool ResponsePacket::operator==(const ResponsePacket& rhs) const{
     return cmd_checksum == rhs.cmd_checksum
        &&  response_type == rhs.response_type
@@ -95,7 +113,7 @@ bool ResponsePacket::load( const std::array<uint8_t, command_size>& buffer){
     return sum == 0;
 }
 
-bool ResponsePacket::put(std::array<uint8_t, response_size>& buffer){
+bool ResponsePacket::put(ResponseBuffer& buffer, bool recalculate_checksum){
 
     // --- set buffer values
     buffer[0] = cmd_checksum;
@@ -106,6 +124,16 @@ bool ResponsePacket::put(std::array<uint8_t, response_size>& buffer){
     buffer[5] = response_value;
     // --- calculate checksum
     // set the checksum to 0 so it has no effect on the checksum value
-    buffer[6] = communication::calculate_checksum(&(buffer[0]), response_size-1);
+    if (recalculate_checksum){
+        checksum = communication::calculate_checksum(&(buffer[0]), response_size-1);
+    }
+    buffer[6] = checksum;
     return true;
+}
+
+void ResponsePacket::fill_checksum(){
+    // create a temporary buffer on the stack and use the 
+    // fill it with the content and calculate the cecksum from the temp buffer
+    ResponseBuffer buf;
+    put(buf, true); // put will update the checksum value
 }

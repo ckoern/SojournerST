@@ -4,6 +4,7 @@
 #include "SojournerSTConfig.hpp"
 #include "MotorController.hpp"
 #include "Packet.hpp"
+#include "stm32g4xx_hal.h"
 class SojournerST{
 public:
     SojournerST();
@@ -11,6 +12,7 @@ public:
 
     bool ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp);
     
+    SPI_HandleTypeDef* spi_handle;
 private:
     // size will not change during runtime,
     // vectors will be initialized during SojournerST 

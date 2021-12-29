@@ -69,7 +69,7 @@ enum ResponseType{
 };
 
 namespace communication{
-	inline uint8_t calculate_sum( uint8_t* buffer, size_t count ){
+	inline uint8_t calculate_bytesum( uint8_t* buffer, size_t count ){
 		uint8_t sum = 0;
 		for (size_t i = 0; i < count; ++i){
 			sum += buffer[i];
@@ -77,10 +77,11 @@ namespace communication{
 		return sum;
 	}
 	inline uint8_t calculate_checksum( uint8_t* buffer, size_t count ){
-		uint8_t sum = calculate_sum(buffer, count);
-		return -static_cast<uint16_t>(sum); // two's complement
+		uint8_t sum = calculate_bytesum(buffer, count);
+		return -static_cast<uint16_t>(sum); // implicit two's complement
 	}
 
+	// interpret the buffer as a float representation
 	inline float   extractValueAsFloat(uint32_t value){
 		float val;
 		memcpy(&val, 
@@ -129,12 +130,18 @@ struct ResponsePacket{
 	uint8_t cmd_checksum;
 	ResponseType response_type;
 	uint32_t response_value;
+	uint8_t checksum;
+
+	ResponsePacket() = default;
+	ResponsePacket(const ResponsePacket&) = default;
+	ResponsePacket(uint8_t, ResponseType, uint32_t);
+	ResponsePacket(uint8_t, ResponseType, uint32_t, uint8_t);
 
 	bool operator==(const ResponsePacket&) const;
 
 	bool load( const ResponseBuffer& buffer);
-	bool put(ResponseBuffer& buffer);
-
+	bool put(ResponseBuffer& buffer, bool recalculate_checksum = false);
+	void fill_checksum();
 
 	inline void setValueFromFloat(float value);
 };

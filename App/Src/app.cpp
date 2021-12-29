@@ -22,8 +22,10 @@
 
 SojournerST board;
 TaskHandle_t motor_pid_update_handle;
+TaskHandle_t spi_com_handle;
 
 void MotorPidUpdateTask( void* pvParameters );
+void SpiCommunicationTask( void* pvParameters );
 
 void setup_tasks(){
 	BaseType_t status;
@@ -50,5 +52,29 @@ void MotorPidUpdateTask( void* pvParameters ){
     {
         board.UpdatePidLoop(delay_pid);
         vTaskDelay(delay_pid);
+    }
+}
+
+
+
+void SpiCommunicationTask( void* pvParameters ){
+    
+    CommandBuffer rx_buffer;
+    ResponseBuffer tx_buffer;
+    
+    HAL_SPI_TransmitReceive_IT( board.spi_handle, &(tx_buffer[0]), &(pRxData[0]), command_size);
+    for (;;){
+        ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+        board.ExecuteCommand(rx_buffer, tx_buffer);
+        HAL_SPI_TransmitReceive_IT( board.spi_handle, &(tx_buffer[0]), &(pRxData[0]), command_size);
+    }
+}
+
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef * hspi){
+    if( hspi->Instance == board.spi_handle ){
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        vTaskNotifyGiveFromISR( spi_com_handle, &xHigherPriorityTaskWoken );
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 }
