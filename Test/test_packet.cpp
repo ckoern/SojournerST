@@ -7,7 +7,7 @@ TEST(Packet, BasicAssertions) {
 
     std::array<uint8_t, 7> data = {0x00,0x00,0x00,0x00,0x00,0x00,0};
     uint8_t checksum = communication::calculate_checksum(&(data[0]), 6);
-    uint8_t wordsum =  communication::calculate_sum(&(data[0]), 6);
+    uint8_t wordsum =  communication::calculate_bytesum(&(data[0]), 6);
     data[6] = checksum;
     EXPECT_EQ(static_cast<uint8_t>(checksum+wordsum), 0);
 

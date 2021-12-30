@@ -14,6 +14,17 @@ typedef struct{
     TIM_TypeDef* Instance;
 } TIM_HandleTypeDef;
 
+
+
+typedef struct{
+
+}SPI_TypeDef;
+
+typedef struct{
+    SPI_TypeDef* Instance;
+} SPI_HandleTypeDef;
+
+
 extern TIM_TypeDef tim1;
 extern TIM_TypeDef tim2;
 extern TIM_TypeDef tim3;
@@ -22,6 +33,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+
 typedef struct{
 
 } GPIO_TypeDef;
