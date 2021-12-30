@@ -23,17 +23,22 @@
 SojournerST board;
 TaskHandle_t motor_pid_update_handle;
 TaskHandle_t spi_com_handle;
+TaskHandle_t uart_com_handle;
 TaskHandle_t heartbeat_handle;
 
 
 void MotorPidUpdateTask( void* pvParameters );
 void SpiCommunicationTask( void* pvParameters );
+void UartCommunicationTask( void* pvParameters );
 void HeartbeatTask( void* pvParameters );
 
 void setup_tasks(){
 	BaseType_t status;
 	status = xTaskCreate( MotorPidUpdateTask, "MotorPidUpdate", 128,
 				 NULL, tskIDLE_PRIORITY, &motor_pid_update_handle
+				);
+    status = xTaskCreate( UartCommunicationTask, "UartCom", 128,
+				 NULL, tskIDLE_PRIORITY, &uart_com_handle
 				);
     status = xTaskCreate( HeartbeatTask, "Heartbeat", 128,
 				 NULL, tskIDLE_PRIORITY, &heartbeat_handle
@@ -84,6 +89,37 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef * hspi){
         portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 }
+
+
+
+void UartCommunicationTask( void* pvParameters ){
+    
+    CommandBuffer rx_buffer;
+    ResponseBuffer tx_buffer;
+    
+    HAL_UART_Transmit(&huart1, &(tx_buffer[0]), command_size, 10000 );
+
+
+    HAL_UART_Receive_IT( &huart1, &(rx_buffer[0]), command_size );
+
+    for(;;){
+        // wait for signal from the UART finished interrupt handler and then process command
+        ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+        board.ExecuteCommand(rx_buffer, tx_buffer);
+        HAL_UART_Transmit_IT(&huart1, &(tx_buffer[0]), command_size );
+        HAL_UART_Receive_IT( &huart1, &(rx_buffer[0]), command_size );
+
+    }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+    if( huart->Instance == USART1){
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        vTaskNotifyGiveFromISR( uart_com_handle, &xHigherPriorityTaskWoken );
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
+}
+
 
 void HeartbeatTask( void* pvParameters ){
     constexpr TickType_t delay_led = 500 / portTICK_PERIOD_MS;
