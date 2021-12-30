@@ -61,7 +61,7 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int main(){
-
+	uwTickPrio = TICK_INT_PRIORITY;
 	SystemClock_Config();
 	HAL_Init();
 
