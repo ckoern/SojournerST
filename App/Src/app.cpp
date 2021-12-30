@@ -23,14 +23,20 @@
 SojournerST board;
 TaskHandle_t motor_pid_update_handle;
 TaskHandle_t spi_com_handle;
+TaskHandle_t heartbeat_handle;
+
 
 void MotorPidUpdateTask( void* pvParameters );
 void SpiCommunicationTask( void* pvParameters );
+void HeartbeatTask( void* pvParameters );
 
 void setup_tasks(){
 	BaseType_t status;
 	status = xTaskCreate( MotorPidUpdateTask, "MotorPidUpdate", 128,
 				 NULL, tskIDLE_PRIORITY, &motor_pid_update_handle
+				);
+    status = xTaskCreate( HeartbeatTask, "Heartbeat", 128,
+				 NULL, tskIDLE_PRIORITY, &heartbeat_handle
 				);
 }
 void entrypoint(){
@@ -76,5 +82,16 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef * hspi){
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         vTaskNotifyGiveFromISR( spi_com_handle, &xHigherPriorityTaskWoken );
         portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
+}
+
+void HeartbeatTask( void* pvParameters ){
+    constexpr TickType_t delay_led = 500 / portTICK_PERIOD_MS;
+
+    for(;;){
+        HAL_GPIO_WritePin(LED_STATUS_GPIO_Port,LED_STATUS_Pin,GPIO_PIN_SET);
+        vTaskDelay(delay_led);
+        HAL_GPIO_WritePin(LED_STATUS_GPIO_Port,LED_STATUS_Pin,GPIO_PIN_RESET);
+        vTaskDelay(delay_led);
     }
 }
