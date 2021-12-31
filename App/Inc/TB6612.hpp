@@ -16,6 +16,7 @@ public:
         GPIO_TypeDef* in1_gpio, uint16_t in1_gpio_pin, 
         GPIO_TypeDef* in2_gpio, uint16_t in2_gpio_pin
     );
+    void setup();
     void SetPWM(uint8_t pwm_duty);
     void SetMode( MotorMode mode );
 

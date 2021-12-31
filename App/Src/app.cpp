@@ -46,7 +46,7 @@ void setup_tasks(){
 }
 void entrypoint(){
 
-	
+	board.setup();
 	setup_tasks();
 	vTaskStartScheduler();
 }

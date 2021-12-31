@@ -8,7 +8,11 @@ TB6612::TB6612(
     in1_gpio(in1_gpio), in1_gpio_pin(in1_gpio_pin),
     in2_gpio(in2_gpio), in2_gpio_pin(in2_gpio_pin)
 {
-	HAL_TIM_PWM_Start(pwm_timer, pwm_timer_channel);
+	
+}
+
+void TB6612::setup(){
+    HAL_TIM_PWM_Start(pwm_timer, pwm_timer_channel);
     SetPWM(0);
 }
 void TB6612::SetPWM(uint8_t pwm_duty){

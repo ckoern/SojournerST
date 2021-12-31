@@ -12,8 +12,8 @@ SojournerST::SojournerST() :
     // predefined values
     pid_configs(
         {
-            PidConfig( 0.0006f, 0.000001f, 0.001f, 1.0f ),
-            PidConfig( 0.0006f, 0.000001f, 0.001f, 1.0f )
+            PidConfig( 0.0004f, 0.00001f, 0.0001f, 1.0f ),
+            PidConfig( 0.0004f, 0.00001f, 0.0001f, 1.0f )
         }
     ),
     // initialize the motor controllers
@@ -25,7 +25,7 @@ SojournerST::SojournerST() :
                     M1_IN1_Pin,
                     M1_IN2_GPIO_Port,
                     M1_IN2_Pin), 
-                TimerEncoder(&htim3), 
+                TimerEncoder(&htim4),
                 &(pid_configs[0])
             ),
             MotorController(
@@ -34,7 +34,7 @@ SojournerST::SojournerST() :
                     M2_IN1_Pin,
                     M2_IN2_GPIO_Port,
                     M2_IN2_Pin), 
-                TimerEncoder(&htim4), 
+                TimerEncoder(&htim3),
                 &(pid_configs[1])
             )
         }
@@ -43,6 +43,11 @@ SojournerST::SojournerST() :
 
 }
 
+void SojournerST::setup(){
+    for (auto& controller: motor_controllers){
+        controller.setup();
+    }
+}
 
 void SojournerST::UpdatePidLoop(uint32_t delta_t_ms){
     for( auto& controller: motor_controllers){

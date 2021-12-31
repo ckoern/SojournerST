@@ -8,6 +8,7 @@
 class SojournerST{
 public:
     SojournerST();
+    void setup();
     void UpdatePidLoop(uint32_t delta_t_ms);
 
     bool ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp);

@@ -39,6 +39,7 @@ public:
         TimerEncoder encoder,
         PidConfig* pidConfig
     );
+	void setup();
     void reset();
     void step(uint32_t delta_t_ms);
 	const EncoderState& GetEncoderState() const { return encoderState;};

@@ -6,9 +6,12 @@ public:
     TimerEncoder(TIM_HandleTypeDef* timer_handle) 
         : timer(timer_handle)
     {
-        HAL_TIM_Encoder_Start(timer, TIM_CHANNEL_ALL);
+        
     }
     int32_t GetCount() const {return timer->Instance->CNT;};
+    void setup(){
+        HAL_TIM_Encoder_Start(timer, TIM_CHANNEL_ALL);
+    };
 private:
     TIM_HandleTypeDef* timer;
 };

@@ -21,6 +21,11 @@ MotorController::MotorController(
     
 }
 
+void MotorController::setup(){
+	tb6612.setup();
+	encoder.setup();
+}
+
 void MotorController::reset(){
     pidState = {
         .integrator_state = 0,
