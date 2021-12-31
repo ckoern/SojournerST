@@ -61,7 +61,7 @@ bool SojournerST::ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp)
     // check if checksum is valid
     if (!success){
         response_packet.response_type = Error_Checksum;
-        response_packet.put(resp);
+        response_packet.put(resp, true);
         return false;
     }
     
@@ -70,7 +70,7 @@ bool SojournerST::ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp)
     // check if packet starts with sync byte
     if (command_packet.sync != command_sync_byte){
         response_packet.response_type = Error_Sync;
-        response_packet.put(resp);
+        response_packet.put(resp, true);
         return false;
     }
 
@@ -84,7 +84,7 @@ bool SojournerST::ExecuteCommand(const CommandBuffer& cmd, ResponseBuffer& resp)
     }
 
     // encode the response packet and store it into the com buffer
-    response_packet.put(resp);
+    response_packet.put(resp, true);
     return response_packet.response_value == Success;
 }
 

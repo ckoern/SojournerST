@@ -28,3 +28,12 @@ TEST(Packet, BasicAssertions) {
     rcv_resp.load(data);
     EXPECT_EQ(send_resp, rcv_resp);
 }
+
+TEST(Packet, ResponseChecksum){
+    ResponseBuffer data;
+    ResponsePacket send_resp {0xcc, Error_Checksum , 123953};
+    send_resp.put(data);
+    uint8_t checksum = communication::calculate_checksum(&(data[0]), 6);
+    uint8_t wordsum =  communication::calculate_bytesum(&(data[0]), 6);
+    EXPECT_EQ(static_cast<uint8_t>(checksum+wordsum), 0);
+}

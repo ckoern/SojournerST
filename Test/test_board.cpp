@@ -107,13 +107,10 @@ TEST_P(BoardComReadWriteCycleTestFixture, RWCycleTest){
     board.ExecuteCommand(command_data, response_data);
     rcv.load(response_data);
 
-    // the command_checksum was not known before
-    as.write_cycle_resp_expect.cmd_checksum = send.checksum;
     
     // only check response type and cmd_checksum 
-    // as value can be undefined during write calls
+    // as value (and therefore checksum) can be undefined during write calls
     EXPECT_EQ( rcv.response_type, as.write_cycle_resp_expect.response_type );
-    EXPECT_EQ( rcv.cmd_checksum, as.write_cycle_resp_expect.cmd_checksum );
     
     // if we expect a success we also check the read cycle
     if (as.write_cycle_resp_expect.response_type != ResponseType::Success){
@@ -123,11 +120,11 @@ TEST_P(BoardComReadWriteCycleTestFixture, RWCycleTest){
     send.put(command_data);
     board.ExecuteCommand(command_data, response_data);
     rcv.load(response_data);
-    as.read_cycle_resp_expect.cmd_checksum = send.checksum;
 
     // for reads, require equality also for the value
     EXPECT_EQ( rcv, as.read_cycle_resp_expect );
-    
+    EXPECT_EQ(rcv.checksum, as.read_cycle_resp_expect.checksum);
+    //EXPECT_EQ( communication::calculate_bytesum(&(response_data[0]), response_size), 0 );
 }
 
 
@@ -145,9 +142,9 @@ std::vector<commandcyle_test_param> generate_commandcyle_test_param_sets(){
         for (auto channel: {Channel1, Channel2}){
             for(auto set_value: set_values){
                 CommandPacket write_cmd { Channel, channel, static_cast<CommandType>(read_cmd_id + 32), set_value };
-                ResponsePacket write_response { 0, Success, 0 };
+                ResponsePacket write_response { write_cmd.checksum, Success, 0 };
                 CommandPacket read_cmd { Channel, channel, static_cast<CommandType>(read_cmd_id), 0 };
-                ResponsePacket read_response { 0, Success, set_value };
+                ResponsePacket read_response { read_cmd.checksum, Success, set_value };
 
                 test_sets.push_back( {write_cmd, write_response, read_cmd, read_response} );
             }

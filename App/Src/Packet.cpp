@@ -104,7 +104,7 @@ bool ResponsePacket::load( const std::array<uint8_t, command_size>& buffer){
                    + (buffer[3] << 16)
                    + (buffer[4] << 8)
                    + (buffer[5]);
-
+    checksum = buffer[6];
     // validate checksum
     uint8_t sum = 0;
     for (auto word: buffer){

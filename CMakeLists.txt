@@ -34,7 +34,8 @@ if (SOJOURNER_TESTS)
     Test/Stubs/Src/stm32g4xx_hal.c
     )
 
-    target_compile_options(sojournerst_test PRIVATE -Wall -Wextra)
+    target_compile_options(sojournerst_test PRIVATE 
+                   -Wall -Wextra "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>" )
 
     target_include_directories(sojournerst_test PUBLIC 
                     App/Inc
