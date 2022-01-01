@@ -29,7 +29,7 @@ SojournerST::SojournerST() :
                 &(pid_configs[0])
             ),
             MotorController(
-                TB6612( &htim2, TIM_CHANNEL_2,
+                TB6612( &htim2, TIM_CHANNEL_4,
                     M2_IN1_GPIO_Port,
                     M2_IN1_Pin,
                     M2_IN2_GPIO_Port,

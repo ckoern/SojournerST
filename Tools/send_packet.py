@@ -76,12 +76,14 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
             v = read_float(5) #kp
             print(f"Current Kp: {v}")
             print("-------")
-            time.sleep(1)
+            time.sleep(.1)
             write_float(5+32, 0.001) #kp
-            time.sleep(1)
+            time.sleep(.1)
             write_float(6+32, 0.0006) #ki
-            time.sleep(1)
-            write_float(7+32, 0.0002) #kd
+            time.sleep(.1)
+            write_float(7+32, 0.0003) #kd
+            time.sleep(.1)
+            write_float(8+32, 0.5) #kn
             print("-------")
             time.sleep(1)
             v = read_float(5) #kp
