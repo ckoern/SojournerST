@@ -33,7 +33,14 @@ class IntAndTypesEnum(IntEnum):
         self.command_value_type = command_value_type
         self.response_value_type = response_value_type
 
+    def __int__(self):
+        return self.value
+
 class none_type(np.uint32):
+    # custom type used for indicating when a command is either not requiring a 
+    # command value or does not reply a response value
+    # interally the standard uint32 is used and can influence
+    # the checksum, but the exact value might be UB
     pass
 
 class GlobalCommandType(IntAndTypesEnum):
@@ -49,27 +56,27 @@ class ChannelCommandType (IntAndTypesEnum):
 
     # read only
     channel_current_cps = 0x00, none_type, np.float32
-    channel_pid_integrator_state = 0x01, none_type, np.float
-    channel_pid_filter_state = 0x02, none_type, np.float
-    channel_pid_gain = 0x03, none_type, np.float
-    channel_pid_setpoint_error = 0x04, none_type, np.float
+    channel_pid_integrator_state = 0x01, none_type, np.float32
+    channel_pid_filter_state = 0x02, none_type, np.float32
+    channel_pid_gain = 0x03, none_type, np.float32
+    channel_pid_setpoint_error = 0x04, none_type, np.float32
 
     # r/w get commands
-    channel_pid_get_kp = 0x10, none_type, np.float
-    channel_pid_get_ki = 0x11, none_type, np.float
-    channel_pid_get_kd = 0x12, none_type, np.float
-    channel_pid_get_kn = 0x13, none_type, np.float
-    channel_get_target_cps = 0x14, none_type, np.float
+    channel_pid_get_kp = 0x10, none_type, np.float32
+    channel_pid_get_ki = 0x11, none_type, np.float32
+    channel_pid_get_kd = 0x12, none_type, np.float32
+    channel_pid_get_kn = 0x13, none_type, np.float32
+    channel_get_target_cps = 0x14, none_type, np.int32
 
     # write only 
     channel_stop = 0x20, none_type, none_type
     channel_pid_reset = 0x21, none_type, none_type
 
     # r/w set commands ids are offset by 32 (0x20) compared to the getters
-    channel_pid_set_kp = 0x30, np.float, none_type
-    channel_pid_set_ki = 0x31, np.float, none_type
-    channel_pid_set_kd = 0x32, np.float, none_type
-    channel_pid_set_kn = 0x33, np.float, none_type
+    channel_pid_set_kp = 0x30, np.float32, none_type
+    channel_pid_set_ki = 0x31, np.float32, none_type
+    channel_pid_set_kd = 0x32, np.float32, none_type
+    channel_pid_set_kn = 0x33, np.float32, none_type
     channel_set_target_cps = 0x34, np.int32, none_type
     
     
@@ -87,24 +94,30 @@ class ResponseType(IntEnum):
 class CommandPacket:
     def __init__(self, scope: CommandScopeType, bank: CommandBankType, 
                  command_id: Union[GlobalCommandType, ChannelCommandType], 
-                 command_value: Union[none_type, np.int32, np.uint32, np.float32, np.int16] = none_type(0), 
+                 command_value: Union[float, int, none_type, np.int32, np.uint32, np.float32, np.int16] = none_type(0), 
                  sync: int = 0xcc, checksum: int = None 
     ):
         self.scope = scope 
         self.bank = bank
         self.command_id = command_id
-        self.command_value = command_value
         self.sync = sync 
-        if command_id.command_value_type != type(command_value):
+
+        # allow normal python types and cast them to the correct type 
+        if  type(command_value) in [float, int]:
+            command_value = command_id.command_value_type(command_value)
+        # if a numpy datatype is used, it has to be correct
+        elif command_id.command_value_type != type(command_value):
             raise ValueError( f"Given value is of type {type(command_value)} but {command_id.command_value_type} expected for command id {command_id}" )
+        self.command_value = command_value
+
         if checksum is None:
             checksum = self.put()[-1]
         self.checksum = checksum
 
     def put(self)->bytes:
-        b1 = self.scope << 7
-        b1 += self.bank << 6
-        b1 += self.command_id 
+        b1 = int(self.scope) << 7
+        b1 += int(self.bank) << 6
+        b1 += int(self.command_id )
         msg = bytes( [self.sync, b1] )
 
         
@@ -114,7 +127,7 @@ class CommandPacket:
             format_code = ">i"
         elif type(self.command_value) == np.uint32:
             format_code = ">I"
-        elif type(self.command_value) == np.uint32:
+        elif type(self.command_value) == np.float32:
             format_code = ">f"
         else:
             raise ValueError(f"Invalid datatype: {type(self.command_value)}")
@@ -171,15 +184,15 @@ class ResponsePacket():
         self.checksum = checksum
 
     def put(self)->bytes:
-        msg = bytes([self.cmd_checksum, self.response_type ]) 
+        msg = bytes([self.cmd_checksum, int(self.response_type) ]) 
         if type(self.response_value) == np.int32:
             format_code = ">i"
         elif type(self.response_value) == np.uint32:
             format_code = ">I"
-        elif type(self.response_value) == np.uint32:
+        elif type(self.response_value) == np.float32:
             format_code = ">f"
         elif type(self.response_value) ==none_type:
-            format_code = ">f"
+            format_code = ">I"
         else:
             raise ValueError(f"Invalid datatype: { type(self.response_value)}")
 

@@ -8,6 +8,7 @@ build-tests/
 *.bak
 *.swp
 *~.nib
+*.pyc
 local.properties
 .settings/
 .loadpath
