@@ -56,14 +56,14 @@ enum CommandType{
 	channel_pid_setpoint_error,
 
 	// r/w get commands
-	channel_pid_get_kp,
+	channel_pid_get_kp = 16,
 	channel_pid_get_ki,
 	channel_pid_get_kd,
 	channel_pid_get_kn,
 	channel_get_target_cps,
 
 	// write only 
-	channel_stop,
+	channel_stop = 32,
 	channel_pid_reset,
 
 	// r/w set commands, ids are offset by 32 compared to the getters
