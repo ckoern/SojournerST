@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 
 comport = sys.argv[1]
 
-channel = 0 #either 0 or 1
+channel = 1 #either 0 or 1
 com_lock = threading.Lock()
 fig, ax = plt.subplots(5,1,figsize=(8,8), sharex=True)
 fig.show()
 plt.pause(1)
-plotdata = [[],[],[],[],[]]
+plotdata = [[],[],[],[],[], []]
 
 def twos_complement(val):
-    return 256 - (val%256)
+    return (256 - (val%256))%256
 
 
 with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
@@ -79,11 +79,11 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
             time.sleep(.1)
             write_float(5+32, 0.001) #kp
             time.sleep(.1)
-            write_float(6+32, 0.0006) #ki
+            write_float(6+32, 0.001) #ki
             time.sleep(.1)
             write_float(7+32, 0.0003) #kd
             time.sleep(.1)
-            write_float(8+32, 0.5) #kn
+            write_float(8+32, 2) #kn
             print("-------")
             time.sleep(1)
             v = read_float(5) #kp
@@ -103,46 +103,39 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
             time.sleep(1)
 
             target_speed = 1234
-            for s in range(0,target_speed, 300):
-                set_target_cps(s)
-                time.sleep(0.1)
-            set_target_cps(target_speed)
-            print(f"Set Target Cps to {target_speed}")
-            print("-------")
-            time.sleep(1)
+            accel = 100
 
-            v = get_target_cps()
-            print(f"Current Target Cps: {v}")
-            print("-------")
-            time.sleep(0.1)
-            v = read_float(0)
-            print(f"Current Measured Cps: {v}")
-            print("-------")
-            time.sleep(1)
-
-            for i in range(10):
-                v = read_float(0)
-                print(f"Current Measured Cps: {v}")
+            while (True):
+                target_speed *= -1
+                accel *= -1
+                for s in range(0,target_speed, accel):
+                    set_target_cps(s)
+                    time.sleep(0.1)
+                set_target_cps(target_speed)
+                print(f"Set Target Cps to {target_speed}")
                 print("-------")
                 time.sleep(1)
 
+                for i in range(10):
+                    v = read_float(0)
+                    print(f"Current Measured Cps: {v}")
+                    print("-------")
+                    time.sleep(1)
 
-            for s in range(target_speed, 0, -300):
-                set_target_cps(s)
-                time.sleep(0.1)
-            set_target_cps(0)
-            print(f"Set Target Cps to 0")
-            print("-------")
-            time.sleep(1)
 
-            v = get_target_cps()
-            print(f"Current Target Cps: {v}")
-            print("-------")
-            time.sleep(0.1)
-            v = read_float(0)
-            print(f"Current Measured Cps: {v}")
-            print("-------")
-            time.sleep(1)
+                for s in range(target_speed, 0, -accel):
+                    set_target_cps(s)
+                    time.sleep(0.1)
+                set_target_cps(0)
+                print(f"Set Target Cps to 0")
+                print("-------")
+                time.sleep(1)
+
+                for i in range(10):
+                    v = read_float(0)
+                    print(f"Current Measured Cps: {v}")
+                    print("-------")
+                    time.sleep(1)
 
         def set_target_cps(val):
             b1 = 1 << 7
@@ -150,15 +143,21 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
             b1 += 9+32 #get target cps + setter-offset
 
             with com_lock:
-                msg = [0xcc, b1, (val>>24)%256, (val>>16)%256, (val>>8)%256, val%256]
+                msg = [0xcc, b1]#, (val>>24)%256, (val>>16)%256, (val>>8)%256, val%256]
+                msg += list( struct.pack(">i", val) ) 
                 msg.append(calc_checksum(msg))
-                send(bytes(msg))
-                time.sleep(0.1)
-                resp  = recv()
-            if resp[0] != msg[-1]:
-                print("wrong cmd checksum")
-            if resp[1] != 1:
-                print("Cmd no success")
+                try:
+                    send(bytes(msg))
+                    time.sleep(0.1)
+                    resp  = recv()
+                    if resp[0] != msg[-1]:
+                        print("wrong cmd checksum")
+                    if resp[1] != 1:
+                        print("Cmd no success")
+                except ValueError as e:
+                    print(e)
+                    print(msg)
+                
 
 
         def get_target_cps():
@@ -177,10 +176,7 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
             if resp[1] != 1:
                 print("Cmd no success")
                 return -1
-            v = (resp[2] << 24) + \
-                (resp[3] << 16) + \
-                (resp[4] << 8)  + \
-                (resp[5])
+            v = struct.unpack( ">i", bytes(resp[2:6]) )[0]
             return v 
 
         
@@ -194,13 +190,20 @@ with serial.Serial(comport, baudrate=115200, timeout=1) as ser:
                     "Gain",
                     "Setpoint Error"
         ]
+        start = time.time()
+        dt = []
         while(True):
+            now = time.time()
+            dt.append(now-start)
             for i in range(5):
                 ax[i].clear()
                 plotdata[i].append( read_float(i) ) 
-                ax[i].plot(plotdata[i], label = labels[i])
+                ax[i].plot(dt, plotdata[i], label = labels[i])
                 ax[i].set_title(labels[i])
                 ax[i].grid(True)
+            target = get_target_cps()
+            plotdata[-1].append(target)
+            ax[0].plot(dt, plotdata[-1], label = "Target Cps")
             fig.tight_layout()
             fig.canvas.draw()
             plt.pause(0.02)
